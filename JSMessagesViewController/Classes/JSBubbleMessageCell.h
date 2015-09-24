@@ -46,6 +46,11 @@
  */
 @property (weak, nonatomic, readonly) UILabel *subtitleLabel;
 
+/**
+ *  Returns bool value whether cell long tap gesture is enabled.
+ */
+@property (assign, nonatomic) BOOL longTapEnabled;
+
 #pragma mark - Initialization
 
 /**

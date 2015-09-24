@@ -173,11 +173,27 @@
 @property (weak, nonatomic, readonly) JSMessageInputView *messageInputView;
 
 /**
+ *
+ *  Returns the custom tool bar below messageInputView if there is one.
+ */
+@property (strong, nonatomic) UIView *bottomToolBar;
+
+/**
+ *  Returns bool value whether long tap gesture is enabled.
+ */
+@property (assign, nonatomic) BOOL longTapEnabled;
+
+/**
  *  The name of the user sending messages. The default value is `nil`.
  */
 @property (copy, nonatomic) NSString *sender;
 
 #pragma mark - Messages view controller
+
+/**
+ *  Sets the bottom toolbar below messageInputView
+ */
+- (id)initWithBottomToolBar:(UIView *)toolBar;
 
 /**
  *  Animates and resets the text view in messageInputView. Call this method at the end of the delegate method `didSendText:`. 

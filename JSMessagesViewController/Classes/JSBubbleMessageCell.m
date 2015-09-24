@@ -328,7 +328,7 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
 
 - (void)handleLongPressGesture:(UILongPressGestureRecognizer *)longPress
 {
-    if (longPress.state != UIGestureRecognizerStateBegan || ![self becomeFirstResponder])
+    if (!self.longTapEnabled || longPress.state != UIGestureRecognizerStateBegan || ![self becomeFirstResponder])
         return;
     
     UIMenuController *menu = [UIMenuController sharedMenuController];

@@ -46,6 +46,14 @@
 
 @implementation JSMessagesViewController
 
+- (id)initWithBottomToolBar:(UIView *)toolBar {
+    self = [super initWithNibName:nil bundle:nil];
+    if (self) {
+        _bottomToolBar = toolBar;
+    }
+    return self;
+}
+
 #pragma mark - Initialization
 
 - (void)setup
@@ -63,6 +71,7 @@
     
     JSMessageInputViewStyle inputViewStyle = [self.delegate inputViewStyle];
     CGFloat inputViewHeight = (inputViewStyle == JSMessageInputViewStyleFlat) ? 45.0f : 40.0f;
+    CGFloat bottomToolBarHeight = self.bottomToolBar.frame.size.height;
     
 	JSMessageTableView *tableView = [[JSMessageTableView alloc] initWithFrame:self.view.frame style:UITableViewStylePlain];
 	tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -71,14 +80,19 @@
 	[self.view addSubview:tableView];
 	_tableView = tableView;
     
-    [self setTableViewInsetsWithBottomValue:inputViewHeight];
+    [self setTableViewInsetsWithBottomValue:inputViewHeight + bottomToolBarHeight];
     
     [self setBackgroundColor:[UIColor js_backgroundColorClassic]];
     
     CGRect inputFrame = CGRectMake(0.0f,
-                                   self.view.frame.size.height - inputViewHeight,
+                                   self.view.frame.size.height - inputViewHeight - bottomToolBarHeight,
                                    self.view.frame.size.width,
                                    inputViewHeight);
+    CGRect bottomToolBarFrame = CGRectMake(0,
+                                           inputFrame.origin.y + inputFrame.size.height,
+                                           self.view.frame.size.width,
+                                           bottomToolBarHeight);
+    _bottomToolBar.frame = bottomToolBarFrame;
     
     BOOL allowsPan = YES;
     if ([self.delegate respondsToSelector:@selector(allowsPanToDismissKeyboard)]) {
@@ -108,6 +122,7 @@
                    forControlEvents:UIControlEventTouchUpInside];
     
     [self.view addSubview:inputView];
+    [self.view addSubview:_bottomToolBar];
     _messageInputView = inputView;
 }
 
@@ -263,6 +278,7 @@
                                                reuseIdentifier:CellIdentifier];
     }
     
+    [cell setLongTapEnabled:self.longTapEnabled];
     [cell setMessage:message];
     [cell setAvatarImageView:avatar];
     [cell setBackgroundColor:tableView.backgroundColor];
@@ -497,18 +513,22 @@
                      animations:^{
                          CGFloat keyboardY = [self.view convertRect:keyboardRect fromView:nil].origin.y;
                          
-                         CGRect inputViewFrame = self.messageInputView.frame;
+                         CGRect inputViewFrame = CGRectMake(self.messageInputView.frame.origin.x, self.messageInputView.frame.origin.y, self.messageInputView.frame.size.width, self.messageInputView.frame.size.height + self.bottomToolBar.frame.size.height);
                          CGFloat inputViewFrameY = keyboardY - inputViewFrame.size.height;
                          
                          // for ipad modal form presentations
-                         CGFloat messageViewFrameBottom = self.view.frame.size.height - inputViewFrame.size.height;
+                         CGFloat messageViewFrameBottom = self.view.frame.size.height - self.messageInputView.frame.size.height;
                          if (inputViewFrameY > messageViewFrameBottom)
                              inputViewFrameY = messageViewFrameBottom;
 						 
                          self.messageInputView.frame = CGRectMake(inputViewFrame.origin.x,
 																  inputViewFrameY,
-																  inputViewFrame.size.width,
-																  inputViewFrame.size.height);
+																  self.messageInputView.frame.size.width,
+																  self.messageInputView.frame.size.height);
+                         self.bottomToolBar.frame = CGRectMake(0,
+                                                               self.messageInputView.frame.origin.y + self.messageInputView.frame.size.height,
+                                                               self.bottomToolBar.frame.size.width,
+                                                               self.bottomToolBar.frame.size.height);
                          
                          [self setTableViewInsetsWithBottomValue:self.view.frame.size.height
                           - self.messageInputView.frame.origin.y];
@@ -531,16 +551,24 @@
 - (void)keyboardWillBeDismissed
 {
     CGRect inputViewFrame = self.messageInputView.frame;
-    inputViewFrame.origin.y = self.view.bounds.size.height - inputViewFrame.size.height;
+    inputViewFrame.origin.y = self.view.bounds.size.height - inputViewFrame.size.height - self.bottomToolBar.frame.size.height;
     self.messageInputView.frame = inputViewFrame;
+    
+    CGRect toolBarFrame = self.bottomToolBar.frame;
+    toolBarFrame.origin.y = self.view.bounds.size.height - self.bottomToolBar.frame.size.height;
+    self.bottomToolBar.frame = toolBarFrame;
 }
 
 - (void)animationForMessageInputViewAtPoint:(CGPoint)point
 {
     CGRect inputViewFrame = self.messageInputView.frame;
     CGPoint keyboardOrigin = [self.view convertPoint:point fromView:nil];
-    inputViewFrame.origin.y = keyboardOrigin.y - inputViewFrame.size.height;
+    inputViewFrame.origin.y = keyboardOrigin.y - inputViewFrame.size.height - self.bottomToolBar.frame.size.height;
     self.messageInputView.frame = inputViewFrame;
+    
+    CGRect toolBarFrame = self.bottomToolBar.frame;
+    toolBarFrame.origin.y = keyboardOrigin.y - toolBarFrame.size.height;
+    self.bottomToolBar.frame = toolBarFrame;
 }
 
 @end
